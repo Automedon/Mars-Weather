@@ -25,6 +25,8 @@ const previousSoulTemplate = document.querySelector(
 const previousSoulContainer = document.querySelector("[data-previous-sols]");
 
 const unitToggle = document.querySelector("[data-unit-toggle]");
+const metricRadio = document.getElementById("cel");
+const imperialRadio = document.getElementById("fah");
 
 previousWeatherToggle.addEventListener("click", () => {
   previousWeather.classList.toggle("show-weather");
@@ -34,7 +36,25 @@ getWeather().then((sols) => {
   selectSolIndex = sols.length - 1;
   displaySelectedSol(sols);
   displayPreviousSols(sols);
-  unitToggle.addEventListener("click", () => {});
+  updateUnits();
+  unitToggle.addEventListener("click", () => {
+    let metricUnits = !metricRadio.checked;
+    metricRadio.checked = metricUnits;
+    imperialRadio.checked = !metricUnits;
+    displaySelectedSol(sols);
+    displayPreviousSols(sols);
+    updateUnits();
+  });
+  metricRadio.addEventListener("change", () => {
+    displaySelectedSol(sols);
+    displayPreviousSols(sols);
+    updateUnits();
+  });
+  imperialRadio.addEventListener("change", () => {
+    displaySelectedSol(sols);
+    displayPreviousSols(sols);
+    updateUnits();
+  });
 });
 
 function displaySelectedSol(sols) {
@@ -84,11 +104,19 @@ function displayPreviousSols(sols) {
 }
 
 function displayTemperature(temp) {
-  return Math.round(temp);
+  let returnTemp = temp;
+  if (!isMetric()) {
+    returnTemp = temp * (9 / 5) + 32;
+  }
+  return Math.round(returnTemp);
 }
 
 function displaySpeed(speed) {
-  return Math.round(speed);
+  let returnTemp = speed;
+  if (!isMetric()) {
+    returnTemp = speed / 1.6;
+  }
+  return Math.round(returnTemp);
 }
 
 function getWeather() {
@@ -99,8 +127,8 @@ function getWeather() {
       return Object.entries(solData).map(([sol, data]) => {
         return {
           sol,
-          maxTemp: data.AT.mx,
-          minTemp: data.AT.mn,
+          maxTemp: data.AT?.mx || -20,
+          minTemp: data.AT?.mn || -95,
           windSpeed: data.HWS?.av || 7.2,
           windDirectionDegrees: data.WD?.most_common?.compass_degrees || 293,
           windDirectionCardinal: data.WD?.most_common?.compass_point || "WNW",
@@ -108,4 +136,19 @@ function getWeather() {
         };
       });
     });
+}
+
+function updateUnits() {
+  const speedUnits = document.querySelectorAll("[data-speed-unit]");
+  const tempUnits = document.querySelectorAll("[data-temp-unit]");
+  speedUnits.forEach((unit) => {
+    unit.innerText = isMetric() ? "kph" : "mph";
+  });
+  tempUnits.forEach((unit) => {
+    unit.innerText = isMetric() ? "C" : "F";
+  });
+}
+
+function isMetric() {
+  return metricRadio.checked;
 }
